@@ -1,0 +1,23 @@
+{
+  "name": "WhatOSS",
+  "version": "0.0.0",
+  "description": "Helping you find an OSS project to contribute to",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/WhatOSS/WhatOSS.git"
+  },
+  "keywords": [
+    "node.js",
+    "OSS",
+    "#inspiration"
+  ],
+  "author": "th3james & adammulligan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/WhatOSS/WhatOSS/issues"
+  }
+}
