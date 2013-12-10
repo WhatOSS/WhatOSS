@@ -4,8 +4,8 @@
   "description": "Helping you find an OSS project to contribute to",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "NODE_ENV=test mocha test/**/*.coffee"
   },
   "repository": {
     "type": "git",
@@ -20,5 +20,10 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/WhatOSS/WhatOSS/issues"
+  },
+  "dependencies": {
+    "mocha": "~1.15.1",
+    "chai": "~1.8.1",
+    "coffee-script": "~1.6.3"
   }
 }
