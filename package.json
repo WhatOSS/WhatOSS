@@ -4,7 +4,7 @@
   "description": "Helping you find an OSS project to contribute to",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "supervisor -e 'node|js|json|coffee|hbs' ./index.js",
     "test": "NODE_ENV=test mocha test/**/*.coffee"
   },
   "repository": {
@@ -26,6 +26,7 @@
     "chai": "~1.8.1",
     "coffee-script": "~1.6.3",
     "express": "~3.4.7",
-    "express-hbs": "~0.5.2"
+    "express-hbs": "~0.5.2",
+    "supervisor": "~0.5.6"
   }
 }
