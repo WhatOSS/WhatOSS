@@ -1,9 +1,12 @@
 express = require('express')
 http = require('http')
 hbs = require('express-hbs')
+Persistence = require('./persistence')
 
 exports.start = (port, callback)->
   app = express()
+
+  Persistence.initialize()
 
   app.engine('hbs', hbs.express3({
     partialsDir: __dirname + '/views/partials',
