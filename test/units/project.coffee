@@ -9,11 +9,13 @@ test('.create persists a project record', (done) ->
 
   Project.create(attributes, (err, project) ->
     if err?
-      done(err)
+      console.error err
+      done(new Error(err))
     else
       Project.get(project.id, (err, returnedProject) ->
         if err?
-          done(err)
+          console.error err
+          done(new Error(err))
         else
           try
             assert.strictEqual returnedProject.name, attributes.name,
@@ -21,7 +23,6 @@ test('.create persists a project record', (done) ->
             done()
           catch e
             done(e)
-
       )
   )
 )

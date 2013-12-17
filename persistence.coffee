@@ -8,4 +8,4 @@ exports.initialize = ->
   })
 
 exports.db = ->
-  new(cradle.Connection).database('whatoss')
+  new(cradle.Connection)().database('whatoss')
