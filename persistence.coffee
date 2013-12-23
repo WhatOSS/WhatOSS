@@ -1,5 +1,6 @@
 Promise = require("bluebird")
 request = require('request')
+_ = require('underscore')
 
 CONFIG =
   HOST: '127.0.0.1:5984'
@@ -33,19 +34,37 @@ findOrCreateDb = ->
 loadDesignDocument = (name) ->
   deferred = Promise.defer()
 
-  extend = require('util')._extend
-  document = extend({}, require("./design_documents/#{name}"))
+  console.log "loading design document #{name}"
+  document = _.extend({}, require("./design_documents/#{name}"))
 
   convertFunctionsToStrings(document)
 
-  request.put({
+  request.get({
     json: true
     uri: "http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}/_design/#{name}"
-    body: JSON.stringify(document)
-  }, (err, request, body)->
-    console.log body
-    deferred.resolve()
+  }, (err, req, body) ->
+    if !err? and !body.error?
+      _rev = body._rev
+      delete body._rev
+      console.log "_design/#{name} already exists"
+
+      if _.isEqual(body, document)
+        console.log "design document is already up to date"
+        return deferred.resolve()
+      else
+        console.log "document has been modified, overwriting _rev #{_rev}"
+        document._rev = _rev
+
+    request.put({
+      json: true
+      uri: "http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}/_design/#{name}"
+      body: JSON.stringify(document)
+    }, (err, request, body)->
+      console.log body
+      deferred.resolve()
+    )
   )
+
 
   return deferred.promise
 
