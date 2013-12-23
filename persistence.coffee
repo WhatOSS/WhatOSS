@@ -31,6 +31,18 @@ findOrCreateDb = ->
 
   return deferred.promise
 
+exports.dropDb = ->
+  deferred = Promise.defer()
+
+  request.del("http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}", (err, req, body) ->
+    if err?
+      deferred.reject(err)
+    else
+      deferred.resolve()
+  )
+
+  return deferred.promise
+
 loadDesignDocument = (name) ->
   deferred = Promise.defer()
 
@@ -60,7 +72,6 @@ loadDesignDocument = (name) ->
       uri: "http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}/_design/#{name}"
       body: JSON.stringify(document)
     }, (err, request, body)->
-      console.log body
       deferred.resolve()
     )
   )
@@ -72,3 +83,20 @@ convertFunctionsToStrings = (document) ->
   for viewName, functions of document.views
     for action, fn of functions
       document.views[viewName][action] = fn.toString()
+
+exports.query = (verb, path, options={}) ->
+  deferred = Promise.defer()
+
+  options = _.extend(options, {
+    json: true,
+    uri: "http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}/#{path}"
+  })
+  console.log "#{verb} to #{options.uri}"
+  request[verb](options, (err, req, body)->
+    if err?
+      deferred.reject(err)
+    else
+      deferred.resolve(body)
+  )
+  
+  return deferred.promise

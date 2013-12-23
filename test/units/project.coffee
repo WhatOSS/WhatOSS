@@ -1,28 +1,27 @@
 assert = require('chai').assert
-Project = require('../../models/project')
+request = require('request')
+Persistence = require('../../persistence')
 
-suite('Project')
+suite('_design/projects/_view')
 
-test('.create persists a project record', (done) ->
+test('/all returns all projects', (done) ->
   attributes =
     name: 'diorama'
 
-  Project.create(attributes, (err, project) ->
-    if err?
-      console.error err
-      done(new Error(err))
-    else
-      Project.get(project.id, (err, returnedProject) ->
-        if err?
-          console.error err
-          done(new Error(err))
-        else
-          try
-            assert.strictEqual returnedProject.name, attributes.name,
-              "Expected the queried project to have the correct attributes"
-            done()
-          catch e
-            done(e)
-      )
+  Persistence.query('post', '', body: attributes).then((body)->
+    Persistence.query('get', '_design/projects/_view/all/', body._id)
+  ).then((returnedProjects) ->
+    try
+      assert.strictEqual returnedProjects.total_rows, 1,
+        "Expected the one created record to be returned"
+
+      returnedProject = returnedProjects.rows[0]
+      assert.strictEqual returnedProject.value, attributes.name,
+        "Expected the queried project to have the correct attributes"
+      done()
+    catch e
+      done(e)
+  ).error(->
+    done(new Error(err))
   )
 )

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "supervisor -e 'node|js|json|coffee|hbs' ./index.js",
-    "test": "NODE_ENV=test mocha test/**/*.coffee"
+    "test": "NODE_ENV=test mocha test/helper.coffee test/**/*.coffee"
   },
   "repository": {
     "type": "git",

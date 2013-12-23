@@ -3,4 +3,4 @@ module.exports =
   views:
     all:
       map: (doc) ->
-        emit(doc._id, doc._rev)
+        emit(doc._id, doc.name)
