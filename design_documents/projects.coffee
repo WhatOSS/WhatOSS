@@ -3,4 +3,5 @@ module.exports =
   views:
     all:
       map: (doc) ->
-        emit(doc._id, doc)
+        if doc.type? and doc.type is 'project'
+          emit(doc._id, doc)
