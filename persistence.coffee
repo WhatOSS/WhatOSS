@@ -24,12 +24,10 @@ findOrCreateDb = ->
   nano.db.create(CONFIG.DB_NAME, (err, body)->
     if err?
       if err.message is 'The database could not be created, the file already exists.'
-        console.log "Using pre-existing DB #{CONFIG.DB_NAME}"
         deferred.resolve()
       else
         deferred.reject(body.error)
     else
-      console.log "Created database #{CONFIG.DB_NAME}"
       deferred.resolve()
   )
 
@@ -52,7 +50,6 @@ loadDesignDocument = (name) ->
   deferred = Promise.defer()
   nanoDb = exports.nanoDb()
 
-  console.log "loading design document #{name}"
   document = _.extend({}, require("./design_documents/#{name}"))
 
   convertFunctionsToStrings(document)
@@ -61,20 +58,16 @@ loadDesignDocument = (name) ->
     if !err?
       _rev = body._rev
       delete body._rev
-      console.log "_design/#{name} already exists"
 
       if _.isEqual(body, document)
-        console.log "design document is already up to date"
         return deferred.resolve()
       else
-        console.log "document has been modified, overwriting _rev #{_rev}"
         document._rev = _rev
 
-    nanoDb.insert(document, (err, request, body)->
-      if err?
-        deferred.reject(err)
-      else
-        deferred.resolve()
+    nanoDb.insertAsync(document).then(->
+      deferred.resolve()
+    ).catch((err)->
+      deferred.reject(err)
     )
   )
 
