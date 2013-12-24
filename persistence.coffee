@@ -1,32 +1,36 @@
-Promise = require("bluebird")
-request = require('request')
-_ = require('underscore')
-
 CONFIG =
   HOST: '127.0.0.1:5984'
   DB_NAME: 'whatoss'
+
+Promise = require("bluebird")
+_ = require('underscore')
 
 exports.initialize = ->
   findOrCreateDb().then(->
     loadDesignDocument('projects')
   )
 
+exports.nano = ->
+  require('nano')("http://#{CONFIG.HOST}")
+
+exports.nanoDb = ->
+  nanoDb = exports.nano().use(CONFIG.DB_NAME)
+  return Promise.promisifyAll(nanoDb)
+
 findOrCreateDb = ->
   deferred = Promise.defer()
+  nano = exports.nano()
 
-  request.put({json: true, uri: "http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}"}, (err, request, body)->
+  nano.db.create(CONFIG.DB_NAME, (err, body)->
     if err?
-      deferred.reject(err)
-    else
-      if body.error?
-        if body.error is 'file_exists'
-          console.log "Using pre-existing DB #{CONFIG.DB_NAME}"
-          deferred.resolve()
-        else
-          deferred.reject(body.error)
-      else
-        console.log "Created database #{CONFIG.DB_NAME}"
+      if err.message is 'The database could not be created, the file already exists.'
+        console.log "Using pre-existing DB #{CONFIG.DB_NAME}"
         deferred.resolve()
+      else
+        deferred.reject(body.error)
+    else
+      console.log "Created database #{CONFIG.DB_NAME}"
+      deferred.resolve()
   )
 
   return deferred.promise
@@ -34,7 +38,8 @@ findOrCreateDb = ->
 exports.dropDb = ->
   deferred = Promise.defer()
 
-  request.del("http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}", (err, req, body) ->
+  nano = exports.nano()
+  nano.db.destroy(CONFIG.DB_NAME, (err, body) ->
     if err?
       deferred.reject(err)
     else
@@ -45,17 +50,15 @@ exports.dropDb = ->
 
 loadDesignDocument = (name) ->
   deferred = Promise.defer()
+  nanoDb = exports.nanoDb()
 
   console.log "loading design document #{name}"
   document = _.extend({}, require("./design_documents/#{name}"))
 
   convertFunctionsToStrings(document)
 
-  request.get({
-    json: true
-    uri: "http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}/_design/#{name}"
-  }, (err, req, body) ->
-    if !err? and !body.error?
+  nanoDb.get("_design/#{name}", (err, body) ->
+    if !err?
       _rev = body._rev
       delete body._rev
       console.log "_design/#{name} already exists"
@@ -67,15 +70,13 @@ loadDesignDocument = (name) ->
         console.log "document has been modified, overwriting _rev #{_rev}"
         document._rev = _rev
 
-    request.put({
-      json: true
-      uri: "http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}/_design/#{name}"
-      body: JSON.stringify(document)
-    }, (err, request, body)->
-      deferred.resolve()
+    nanoDb.insert(document, (err, request, body)->
+      if err?
+        deferred.reject(err)
+      else
+        deferred.resolve()
     )
   )
-
 
   return deferred.promise
 
@@ -83,20 +84,3 @@ convertFunctionsToStrings = (document) ->
   for viewName, functions of document.views
     for action, fn of functions
       document.views[viewName][action] = fn.toString()
-
-exports.query = (verb, path, options={}) ->
-  deferred = Promise.defer()
-
-  options = _.extend(options, {
-    json: true,
-    uri: "http://#{CONFIG.HOST}/#{CONFIG.DB_NAME}/#{path}"
-  })
-  console.log "#{verb} to #{options.uri}"
-  request[verb](options, (err, req, body)->
-    if err?
-      deferred.reject(err)
-    else
-      deferred.resolve(body)
-  )
-  
-  return deferred.promise

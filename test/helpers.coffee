@@ -11,9 +11,9 @@ before( (done) ->
 afterEach((done)->
   Persistence.dropDb().then(
     Persistence.initialize
-  ).then(
-    done
-  ).error((err)->
+  ).then(->
+    done()
+  ).catch((err)->
     console.error "Error cleaning the database:"
     console.error err
     done(err)
