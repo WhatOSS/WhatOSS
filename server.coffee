@@ -1,5 +1,6 @@
 express = require('express')
 http = require('http')
+path = require('path')
 hbs = require('express-hbs')
 Persistence = require('./persistence')
 
@@ -15,6 +16,8 @@ exports.start = (port, callback)->
     app.set('views', __dirname + '/views')
 
     app.get "/", require('./routes/index')
+
+    app.use express.static(path.join(__dirname, "public"))
 
     server = http.createServer(app).listen port, (err) ->
       callback err, server
