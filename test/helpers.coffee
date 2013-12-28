@@ -1,4 +1,5 @@
 app = require('../server')
+Persistence = require('../persistence')
 test_server = null
 
 before( (done) ->
@@ -6,6 +7,19 @@ before( (done) ->
     test_server = server
     done()
 )
+
+afterEach((done)->
+  Persistence.dropDb().then(
+    Persistence.initialize
+  ).then(->
+    done()
+  ).catch((err)->
+    console.error "Error cleaning the database:"
+    console.error err
+    done(err)
+  )
+)
+  
 
 after( (done) ->
   test_server.close (err) ->
